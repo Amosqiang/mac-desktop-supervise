@@ -39,6 +39,17 @@ if cfg.enableWindowSnap ~= false then
   end
 end
 
+-- 1b. Fast Desktop Space switching with Left Option + 1..4 (Right Option untouched)
+if cfg.enableLeftOptSpaceSwitch ~= false then
+  local swOk, sw = pcall(require, "space_switch")
+  if swOk then
+    sw.bind(cfg.leftOptSpaceCount or 4)
+  else
+    hs.alert.show("space_switch load error - check ~/.hammerspoon/desk_layout.log")
+    logInitError(sw)
+  end
+end
+
 -- 2. Desk Layout Snapshot Engine
 local ok, desk = pcall(require, "desk_layout")
 if not ok then

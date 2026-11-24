@@ -50,7 +50,12 @@ return {
     "com.apple.archiveutility",    -- 归档实用工具
   },
 
-  -- 6. 临时窗口分屏快捷键（1:1 替代 Rectangle；不需要分屏可设为 false）
+  -- 6. 左侧 Option + 1~4 快速切桌面（完全不拦截右侧 Option，不影响豆包等语音输入键！）
+  -- 依赖系统设置「键盘快捷键 -> 调度中心 -> 切换到桌面 1~4」已勾选（默认 Ctrl+1~4）
+  enableLeftOptSpaceSwitch = true,
+  leftOptSpaceCount = 4, -- 支持左 Option + 1 ~ 4（可按桌面数量改为 1 ~ 9）
+
+  -- 7. 临时窗口分屏快捷键（1:1 替代 Rectangle；不需要分屏可设为 false）
   enableWindowSnap = true,
   snapKeys = {
     leftHalf        = { { "alt", "cmd" }, "left" },   -- 左半屏（多屏下连按跨屏）

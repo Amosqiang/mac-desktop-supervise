@@ -57,6 +57,7 @@ done
 echo "[3/5] 安装核心脚本与跨桌面引擎..."
 cp "$ROOT/hammerspoon/init.lua" "$HS_DIR/init.lua"
 cp "$ROOT/hammerspoon/window_snap.lua" "$HS_DIR/window_snap.lua"
+cp "$ROOT/hammerspoon/space_switch.lua" "$HS_DIR/space_switch.lua"
 cp "$ROOT/hammerspoon/desk_layout.lua" "$HS_DIR/desk_layout.lua"
 cp "$ROOT/hammerspoon/mission_control.lua" "$HS_DIR/mission_control.lua"
 cp "$ROOT/hammerspoon/bin/spacectl" "$HS_DIR/bin/spacectl"
