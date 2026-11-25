@@ -10,7 +10,10 @@
 ## 核心功能
 
 - **多场景一键秒切**：按 `Ctrl + Opt + Cmd + 1 / 2 / 3 ...` 在不同工作区之间瞬间切换（例如 `Base` 日常全套、`Study` 专注读论文、`Focus` 纯代码模式），自动关闭乱飞的 Finder 窗口并清退无关软件。
-- **无需 Alfred 也能用**：仅需免费开源的 **Hammerspoon**！内置搜索面板（`Ctrl + Opt + Cmd + W`），支持模糊搜索切换、保存和删除布局。
+- **内置 1:1 Alfred 级搜索面板（`Ctrl + Opt + Cmd + W`，零额外 App 污染）**：仅需免费开源的 **Hammerspoon**！按下快捷键秒开原生悬浮搜索栏，带真实 Mac 软件图标与窗口摘要，支持：
+  - **`Enter`** 立即切换、**`Cmd + Enter`** 覆盖保存（自动备份）、**`Opt + Enter`** 删除释放槽位；
+  - 搜索框直接输入 **`save 名字`**（或直接输入任意新名字）回车一步新建/覆盖，输入 **`del 名字`** 直接删除；
+  - 默认开启 **`enableBuiltInHotkeys = "auto"`**：没开 Alfred 时全部快捷键开箱即用；检测到 Alfred 运行时自动让出 `⌃⌥⌘S / 1~9` 零冲突！
 - **防污染快照 + 自动备份**：按 `Ctrl + Opt + Cmd + S` 保存前会先列出每个桌面捕获到的窗口清单，自动过滤活动监视器/系统设置等杂窗；每次覆盖前自动备份旧版本到 `~/.hammerspoon/backups/`（保留最近 10 份）。
 - **隐形常驻，直接替代 Rectangle**：菜单栏和 Dock 均不占图标，内置零延迟分屏快捷键，支持 `Ctrl+Cmd+T`（左 1/3 / 右 1/3 切换）和 `Ctrl+Cmd+Y`（左 2/3 / 右 2/3 切换）。
 - **（可选）Alfred Powerpack 联动**：附带双击即装的 `alfred/Desk-Layout.alfredworkflow`，输入 `ws` 即可可视化管理全部工作区。

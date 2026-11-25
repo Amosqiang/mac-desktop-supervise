@@ -950,63 +950,184 @@ function M.openDeletePalette()
   activeChooser:show()
 end
 
+local function primaryAppIcon(layout)
+  if layout and layout.windows then
+    for _, w in ipairs(layout.windows) do
+      if w.bundleID and w.bundleID ~= "" then
+        local img = hs.image.imageFromAppBundle(w.bundleID)
+        if img then return img end
+      end
+    end
+  end
+  return hs.image.imageFromName("NSComputer")
+end
+
+local function buildPaletteChoices(list, rawQuery)
+  local q = (rawQuery or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  local ql = q:lower()
+  local choices = {}
+  local wsImg = hs.image.imageFromName("NSFolderSmart")
+  local saveImg = hs.image.imageFromName("NSAddTemplate") or wsImg
+  local delImg = hs.image.imageFromName("NSTrashFull") or wsImg
+  local reloadImg = hs.image.imageFromName("NSRefreshTemplate") or wsImg
+
+  -- Command 1: `save <name>` or `s <name>` -> instant direct save/overwrite (1:1 Alfred `ws save`)!
+  local saveName = q:match("^[Ss][Aa][Vv][Ee]%s+(.+)$") or q:match("^[Ss]%s+(.+)$")
+  if saveName and saveName ~= "" then
+    table.insert(choices, {
+      text = string.format("保存 / 覆盖布局「%s」", saveName),
+      subText = "回车立即抓取当前所有桌面窗口并保存（同名自动备份旧版）",
+      image = saveImg,
+      action = "save_direct",
+      name = saveName,
+    })
+    return choices
+  end
+
+  -- Command 2: `del <query>` or `d <query>` -> instant direct delete (1:1 Alfred `ws del`)!
+  local delQuery = q:match("^[Dd][Ee][Ll]%s*(.*)$") or q:match("^[Dd]%s+(.*)$")
+  if delQuery ~= nil then
+    local dql = delQuery:lower()
+    for _, item in ipairs(list) do
+      if dql == "" or item.name:lower():find(dql, 1, true) then
+        local slotTag = item.slot and string.format("  [释放槽位 %d]", item.slot) or ""
+        table.insert(choices, {
+          text = "删除「" .. item.name .. "」" .. slotTag,
+          subText = oneLineSummary(item.layout) .. "   ·   回车立即删除",
+          image = delImg,
+          action = "delete_direct",
+          name = item.name,
+        })
+      end
+    end
+    if #choices == 0 then
+      table.insert(choices, {
+        text = "未找到匹配「" .. delQuery .. "」的布局",
+        subText = "检查布局名称后重试",
+        image = delImg,
+        action = "noop",
+      })
+    end
+    return choices
+  end
+
+  -- Normal mode: fuzzy search existing layouts with real app icons + Enter / Cmd+Enter / Opt+Enter!
+  local exactMatch = false
+  for _, item in ipairs(list) do
+    local summary = oneLineSummary(item.layout)
+    local slotStr = item.slot and tostring(item.slot) or ""
+    if item.name:lower() == ql then exactMatch = true end
+
+    if ql == ""
+      or item.name:lower():find(ql, 1, true)
+      or summary:lower():find(ql, 1, true)
+      or slotStr == ql then
+      local slotTag = item.slot and string.format("   [⌃⌥⌘%d]", item.slot) or ""
+      local count = #(item.layout.windows or {})
+      table.insert(choices, {
+        text = item.name .. slotTag,
+        subText = string.format("%d 窗口 · %s   |   ↩ 切换 · ⌘↩ 覆盖 · ⌥↩ 删除", count, summary),
+        image = primaryAppIcon(item.layout),
+        action = "layout",
+        name = item.name,
+      })
+    end
+  end
+
+  -- Typing any new name not in existing layouts -> offer 1-Enter instant creation!
+  if q ~= "" and not exactMatch and ql ~= "save" and ql ~= "reload" then
+    table.insert(choices, {
+      text = string.format("+ 将当前桌面保存为新布局「%s」", q),
+      subText = "回车立即抓取当前所有桌面窗口并分配快捷键槽位",
+      image = saveImg,
+      action = "save_direct",
+      name = q,
+    })
+  end
+
+  if ql == "" or ("save"):find(ql, 1, true) or ("保存"):find(ql, 1, true) then
+    table.insert(choices, {
+      text = "+ 保存 / 覆盖当前桌面布局…",
+      subText = "提示：直接输入「save 名称」可免弹窗一步保存",
+      image = saveImg,
+      action = "save_interactive",
+    })
+  end
+
+  if ql == "" or ("reload"):find(ql, 1, true) or ("重载"):find(ql, 1, true) then
+    table.insert(choices, {
+      text = "↻ 重载配置",
+      subText = "修改 config.lua 后点击立即生效",
+      image = reloadImg,
+      action = "reload",
+    })
+  end
+
+  return choices
+end
+
 function M.openPalette()
   local store = loadStore()
   local list = sortedLayoutsList(store)
-  local choices = {}
-
-  for _, item in ipairs(list) do
-    local slotTag = item.slot and string.format("  [Ctrl+Opt+Cmd+%d]", item.slot) or ""
-    local count = #(item.layout.windows or {})
-    table.insert(choices, {
-      text = item.name .. slotTag,
-      subText = string.format("%d 窗口 · %s", count, oneLineSummary(item.layout)),
-      action = "restore",
-      name = item.name,
-    })
-  end
-
-  table.insert(choices, {
-    text = "+ 保存 / 覆盖当前桌面为布局…",
-    subText = "等同于 Ctrl+Opt+Cmd+S（会先预览窗口清单，同名自动备份后覆盖）",
-    action = "save",
-  })
-
-  if #list > 0 then
-    table.insert(choices, {
-      text = "- 删除某个已有布局…",
-      subText = "删除后自动释放对应的数字快捷键槽位",
-      action = "delete_menu",
-    })
-  end
 
   activeChooser = hs.chooser.new(function(choice)
-    if not choice then return end
-    if choice.action == "restore" then
-      M.restoreByName(choice.name)
-    elseif choice.action == "save" then
+    if not choice or choice.action == "noop" then return end
+    local mods = hs.eventtap.checkKeyboardModifiers() or {}
+    if choice.action == "layout" then
+      if mods.cmd then
+        M.saveByName(choice.name)
+      elseif mods.alt then
+        M.deleteByName(choice.name)
+      else
+        M.restoreByName(choice.name)
+      end
+    elseif choice.action == "save_direct" then
+      M.saveByName(choice.name)
+    elseif choice.action == "delete_direct" then
+      M.deleteByName(choice.name)
+    elseif choice.action == "save_interactive" then
       hs.timer.doAfter(0.1, function() M.saveInteractive() end)
-    elseif choice.action == "delete_menu" then
-      hs.timer.doAfter(0.1, function() M.openDeletePalette() end)
+    elseif choice.action == "reload" then
+      alert("正在重载配置…", 1)
+      hs.timer.doAfter(0.15, function() hs.reload() end)
     end
   end)
-  activeChooser:placeholderText("搜索并切换工作区布局（回车立即切换）…")
-  activeChooser:searchSubText(true)
-  activeChooser:choices(choices)
+
+  activeChooser:width(42)
+  activeChooser:rows(7)
+  activeChooser:placeholderText("输入布局名切换（↩ 切换 · ⌘↩ 覆盖 · ⌥↩ 删除），或输入 save 名字 / del 名字…")
+  activeChooser:queryChangedCallback(function(q)
+    activeChooser:choices(buildPaletteChoices(list, q))
+  end)
+  activeChooser:choices(buildPaletteChoices(list, ""))
   activeChooser:show()
+end
+
+local alfredSharedHotkeys = {}
+local alfredWatcher = nil
+
+local function setAlfredSharedHotkeysEnabled(enabled)
+  for _, hk in ipairs(alfredSharedHotkeys) do
+    if enabled then hk:enable() else hk:disable() end
+  end
+end
+
+local function isAlfredRunning()
+  return hs.application.find("com.runningwithcrayons.Alfred") ~= nil
 end
 
 function M.bindHotkeys(cfg)
   cfg = cfg or {}
+  local mode = cfg.enableBuiltInHotkeys
+  if mode == false then return end
+
   local mods = cfg.layoutMods or { "ctrl", "alt", "cmd" }
   local saveKey = cfg.saveKey or "s"
   local paletteKey = cfg.paletteKey or "w"
   local reloadKey = cfg.reloadKey or "r"
   local maxSlots = cfg.maxHotkeySlots or MAX_SLOTS
 
-  if saveKey ~= "" then
-    hs.hotkey.bind(mods, saveKey, function() M.saveInteractive() end)
-  end
+  -- Always available even when Alfred is running (no conflict with Alfred!)
   if paletteKey ~= "" then
     hs.hotkey.bind(mods, paletteKey, function() M.openPalette() end)
   end
@@ -1016,9 +1137,33 @@ function M.bindHotkeys(cfg)
       hs.timer.doAfter(0.15, function() hs.reload() end)
     end)
   end
+
+  -- Save & Slot 1..9 hotkeys: auto-yield to Alfred when mode == "auto" and Alfred is running!
+  alfredSharedHotkeys = {}
+  if saveKey ~= "" then
+    table.insert(alfredSharedHotkeys, hs.hotkey.new(mods, saveKey, function() M.saveInteractive() end))
+  end
   for i = 1, math.min(maxSlots, 9) do
     local slotNum = i
-    hs.hotkey.bind(mods, tostring(slotNum), function() M.restoreSlot(slotNum) end)
+    table.insert(alfredSharedHotkeys, hs.hotkey.new(mods, tostring(slotNum), function() M.restoreSlot(slotNum) end))
+  end
+
+  if mode == "auto" then
+    setAlfredSharedHotkeysEnabled(not isAlfredRunning())
+    if alfredWatcher then alfredWatcher:stop() end
+    alfredWatcher = hs.application.watcher.new(function(_, eventType, appObj)
+      if not appObj then return end
+      if appObj:bundleID() == "com.runningwithcrayons.Alfred" then
+        if eventType == hs.application.watcher.launched then
+          setAlfredSharedHotkeysEnabled(false)
+        elseif eventType == hs.application.watcher.terminated then
+          setAlfredSharedHotkeysEnabled(true)
+        end
+      end
+    end)
+    alfredWatcher:start()
+  else
+    setAlfredSharedHotkeysEnabled(true)
   end
 end
 
