@@ -400,28 +400,40 @@ local function capture()
     end
   end
 
+  local currentSpaces = {}
+  for _, info in pairs(spaces) do
+    if info.current then currentSpaces[info.current] = true end
+  end
+
   local entries = {}
   for _, w in ipairs(listWindows()) do
     local app = appForCapture(w.pid)
     if app then
-      local p = place[w.spaces and w.spaces[1]]
-      local di = p and p.displayIndex or displayIndexForPoint(w.x, w.y, screens)
-      local screen = p and p.screen or screens[di]
+      local isTinyGhost = (w.w or 0) < 320 and (w.h or 0) < 420
+      local sid = w.spaces and w.spaces[1]
       local win = hs.window.get(w.id)
-      local path = app:path()
-      table.insert(entries, {
-        name = (path and path:match("([^/]+)%.app/?$")) or app:name(),
-        appName = app:name(),
-        bundleID = app:bundleID(),
-        path = path,
-        title = win and win:title() or "",
-        displayIndex = di,
-        spaceIndex = p and p.spaceIndex or 1,
-        fullscreen = w.fullscreen == true,
-        frame = relativeFrame({ x = w.x, y = w.y, w = w.w, h = w.h }, screen:frame()),
-        _x = w.x,
-        _y = w.y,
-      })
+      -- On the currently visible Space, a real standard window is always reachable via AX;
+      -- if hs.window.get(w.id) is nil or non-standard, it's a ghost/popover layer (e.g. WeChat 280x380 panel).
+      local isOnCurrentButGhost = sid and currentSpaces[sid] and (not win or not win:isStandard())
+      if not isTinyGhost and not isOnCurrentButGhost then
+        local p = place[sid]
+        local di = p and p.displayIndex or displayIndexForPoint(w.x, w.y, screens)
+        local screen = p and p.screen or screens[di]
+        local path = app:path()
+        table.insert(entries, {
+          name = (path and path:match("([^/]+)%.app/?$")) or app:name(),
+          appName = app:name(),
+          bundleID = app:bundleID(),
+          path = path,
+          title = win and win:title() or "",
+          displayIndex = di,
+          spaceIndex = p and p.spaceIndex or 1,
+          fullscreen = w.fullscreen == true,
+          frame = relativeFrame({ x = w.x, y = w.y, w = w.w, h = w.h }, screen:frame()),
+          _x = w.x,
+          _y = w.y,
+        })
+      end
     end
   end
 
@@ -624,8 +636,22 @@ local function restoreLayout(layout)
     log("app %s: %d window(s) in layout", g.name, #g.rows)
     local app = prepareApp(g.bid, g.path, g.name)
     if app then
+      if app:isHidden() then
+        app:unhide()
+        sleep(0.15)
+      end
       local pid = app:pid()
-      local wins = windowsOfPid(listWindows(), pid)
+      local function realWindowsOfPid()
+        local raw = windowsOfPid(listWindows(), pid)
+        local filtered = {}
+        for _, w in ipairs(raw) do
+          if not ((w.w or 0) < 320 and (w.h or 0) < 420) then
+            table.insert(filtered, w)
+          end
+        end
+        return filtered
+      end
+      local wins = realWindowsOfPid()
       log("  found %d window(s) across all Desktops", #wins)
 
       local missing = #g.rows - #wins
@@ -636,12 +662,15 @@ local function restoreLayout(layout)
         hs.eventtap.keyStroke({ "cmd" }, "n", 0, app)
         sleep(0.6)
       end
-      if missing > 0 then wins = windowsOfPid(listWindows(), pid) end
+      if missing > 0 then wins = realWindowsOfPid() end
 
+      -- CRITICAL: Re-read live Spaces before pulling! Launching or activating an app
+      -- (e.g. Chrome/Zotero) can cause macOS to switch the visible Space mid-restore.
+      spaces, displayOfSpace = readSpaces()
       pullVisible(wins, spaces, displayOfSpace)
       local wanted = {}
       for _, w in ipairs(wins) do wanted[w.id] = true end
-      local axWins = waitUntil(function()
+      local function collectAxWins()
         local list, found = {}, 0
         for _, w in ipairs(app:allWindows()) do
           if wanted[w:id()] then
@@ -650,14 +679,21 @@ local function restoreLayout(layout)
             found = found + 1
           end
         end
+        return list, found
+      end
+      local axWins = waitUntil(function()
+        local list, found = collectAxWins()
         return found >= #wins and list or nil
-      end, 1.5) or (function()
-        local list = {}
-        for _, w in ipairs(app:allWindows()) do
-          if wanted[w:id()] then table.insert(list, w) end
-        end
-        return list
-      end)()
+      end, 1.5)
+      if not axWins then
+        -- Retry once with fresh Space state in case macOS just finished a Space transition
+        spaces, displayOfSpace = readSpaces()
+        pullVisible(wins, spaces, displayOfSpace)
+        axWins = waitUntil(function()
+          local list, found = collectAxWins()
+          return found >= #wins and list or nil
+        end, 1.0) or (collectAxWins())
+      end
       if #axWins < #wins then
         log("  WARNING only %d of %d window(s) reachable after pulling", #axWins, #wins)
       end
