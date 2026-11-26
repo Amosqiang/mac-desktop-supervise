@@ -1,6 +1,5 @@
 -- ============================================================================
 -- Mac Desktop Supervise Engine (Hammerspoon Entry Point)
--- Works 100% standalone (no Alfred required!), with optional Alfred integration.
 -- Customize everything in ~/.hammerspoon/config.lua
 -- ============================================================================
 
@@ -61,12 +60,12 @@ end
 desk.configure(cfg)
 desk.bindUrl()
 
--- Built-in hotkeys (works without Alfred!)
+-- Built-in workspace hotkeys
 if cfg.enableBuiltInHotkeys ~= false then
   desk.bindHotkeys(cfg)
 end
 
--- File trigger fallback (if Hammerspoon was manually quit and relaunched by Alfred)
+-- File trigger fallback (if Hammerspoon was manually quit and relaunched via URL)
 local function urlDecode(s)
   if not s then return nil end
   return s:gsub("+", " "):gsub("%%(%x%x)", function(h)

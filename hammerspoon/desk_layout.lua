@@ -1,5 +1,5 @@
--- Desk Layout: save / restore / delete named window layouts for Alfred.
--- Slots 1..N map to Ctrl+Opt+Cmd+1..N. Layout names are human (Base, Work, Study, ...).
+-- Desk Layout: save / restore / delete named macOS workspace snapshots.
+-- Slots 1..N map to Ctrl+Opt+Cmd+1..N, with built-in search palette on Ctrl+Opt+Cmd+W.
 --
 -- Accessibility (hs.window) only sees windows on the Desktop that is showing,
 -- so every cross-Desktop step goes through bin/spacectl, which sees and moves
@@ -26,8 +26,6 @@ local KEEP_ALIVE_BUNDLES = {
 -- Never captured, never quit.
 local SKIP_BUNDLES = {
   ["org.hammerspoon.Hammerspoon"] = true,
-  ["com.runningwithcrayons.Alfred"] = true,
-  ["com.runningwithcrayons.Alfred-Preferences"] = true,
   ["com.louivers.spacepigeon"] = true,
 }
 
@@ -926,7 +924,7 @@ function M.plan(slot)
 end
 
 ---------------------------------------------------------------------------
--- Built-in Native Workspace Palette (hs.chooser) — Works WITHOUT Alfred!
+-- Built-in Native Workspace Palette (hs.chooser)
 ---------------------------------------------------------------------------
 
 local function sortedLayoutsList(store)
@@ -1007,7 +1005,7 @@ local function buildPaletteChoices(list, rawQuery)
   local delImg = hs.image.imageFromName("NSTrashFull") or wsImg
   local reloadImg = hs.image.imageFromName("NSRefreshTemplate") or wsImg
 
-  -- Command 1: `save <name>` or `s <name>` -> instant direct save/overwrite (1:1 Alfred `ws save`)!
+  -- Command 1: `save <name>` or `s <name>` -> instant direct save/overwrite!
   local saveName = q:match("^[Ss][Aa][Vv][Ee]%s+(.+)$") or q:match("^[Ss]%s+(.+)$")
   if saveName and saveName ~= "" then
     table.insert(choices, {
@@ -1020,7 +1018,7 @@ local function buildPaletteChoices(list, rawQuery)
     return choices
   end
 
-  -- Command 2: `del <query>` or `d <query>` -> instant direct delete (1:1 Alfred `ws del`)!
+  -- Command 2: `del <query>` or `d <query>` -> instant direct delete!
   local delQuery = q:match("^[Dd][Ee][Ll]%s*(.*)$") or q:match("^[Dd]%s+(.*)$")
   if delQuery ~= nil then
     local dql = delQuery:lower()
@@ -1139,23 +1137,9 @@ function M.openPalette()
   activeChooser:show()
 end
 
-local alfredSharedHotkeys = {}
-local alfredWatcher = nil
-
-local function setAlfredSharedHotkeysEnabled(enabled)
-  for _, hk in ipairs(alfredSharedHotkeys) do
-    if enabled then hk:enable() else hk:disable() end
-  end
-end
-
-local function isAlfredRunning()
-  return hs.application.find("com.runningwithcrayons.Alfred") ~= nil
-end
-
 function M.bindHotkeys(cfg)
   cfg = cfg or {}
-  local mode = cfg.enableBuiltInHotkeys
-  if mode == false then return end
+  if cfg.enableBuiltInHotkeys == false then return end
 
   local mods = cfg.layoutMods or { "ctrl", "alt", "cmd" }
   local saveKey = cfg.saveKey or "s"
@@ -1163,7 +1147,9 @@ function M.bindHotkeys(cfg)
   local reloadKey = cfg.reloadKey or "r"
   local maxSlots = cfg.maxHotkeySlots or MAX_SLOTS
 
-  -- Always available even when Alfred is running (no conflict with Alfred!)
+  if saveKey ~= "" then
+    hs.hotkey.bind(mods, saveKey, function() M.saveInteractive() end)
+  end
   if paletteKey ~= "" then
     hs.hotkey.bind(mods, paletteKey, function() M.openPalette() end)
   end
@@ -1173,33 +1159,9 @@ function M.bindHotkeys(cfg)
       hs.timer.doAfter(0.15, function() hs.reload() end)
     end)
   end
-
-  -- Save & Slot 1..9 hotkeys: auto-yield to Alfred when mode == "auto" and Alfred is running!
-  alfredSharedHotkeys = {}
-  if saveKey ~= "" then
-    table.insert(alfredSharedHotkeys, hs.hotkey.new(mods, saveKey, function() M.saveInteractive() end))
-  end
   for i = 1, math.min(maxSlots, 9) do
     local slotNum = i
-    table.insert(alfredSharedHotkeys, hs.hotkey.new(mods, tostring(slotNum), function() M.restoreSlot(slotNum) end))
-  end
-
-  if mode == "auto" then
-    setAlfredSharedHotkeysEnabled(not isAlfredRunning())
-    if alfredWatcher then alfredWatcher:stop() end
-    alfredWatcher = hs.application.watcher.new(function(_, eventType, appObj)
-      if not appObj then return end
-      if appObj:bundleID() == "com.runningwithcrayons.Alfred" then
-        if eventType == hs.application.watcher.launched then
-          setAlfredSharedHotkeysEnabled(false)
-        elseif eventType == hs.application.watcher.terminated then
-          setAlfredSharedHotkeysEnabled(true)
-        end
-      end
-    end)
-    alfredWatcher:start()
-  else
-    setAlfredSharedHotkeysEnabled(true)
+    hs.hotkey.bind(mods, tostring(slotNum), function() M.restoreSlot(slotNum) end)
   end
 end
 

@@ -1,7 +1,7 @@
 # Mac Desktop Supervise — macOS 一键工作区快照与切换引擎
 
-> **无需 Alfred、无需付费软件、菜单栏 0 图标。**  
-> 一键把整台 Mac 的多个桌面保存成「代码一样的快照」，随时一键切换（日常 / 论文 / 纯编程）、一键清场（关闭乱飞的 Finder 和无关弹窗），还顺手 1:1 替代了 Rectangle 分屏。
+> **免费开源 · 零付费依赖 · 菜单栏 0 图标。**  
+> 一键把整台 Mac 的多个桌面保存成「代码一样的快照」，随时一键切换（日常 / 论文 / 纯编程）、一键清场（关闭乱飞的 Finder 和无关弹窗），还顺手 1:1 替代了分屏软件。
 
 [English Guide below](#english-guide) · [给豆包 / AI 助手的修改指南](./GUIDE_FOR_AI.md)
 
@@ -10,13 +10,11 @@
 ## 核心功能
 
 - **多场景一键秒切**：按 `Ctrl + Opt + Cmd + 1 / 2 / 3 ...` 在不同工作区之间瞬间切换（例如 `Base` 日常全套、`Study` 专注读论文、`Focus` 纯代码模式），自动关闭乱飞的 Finder 窗口并清退无关软件。
-- **内置 1:1 Alfred 级搜索面板（`Ctrl + Opt + Cmd + W`，零额外 App 污染）**：仅需免费开源的 **Hammerspoon**！按下快捷键秒开原生悬浮搜索栏，带真实 Mac 软件图标与窗口摘要，支持：
+- **内置原生工作区搜索面板（`Ctrl + Opt + Cmd + W`，零额外 App 污染）**：仅需免费开源的 **Hammerspoon**！按下快捷键秒开原生悬浮搜索栏，带真实 Mac 软件图标与窗口摘要，支持：
   - **`Enter`** 立即切换、**`Cmd + Enter`** 覆盖保存（自动备份）、**`Opt + Enter`** 删除释放槽位；
-  - 搜索框直接输入 **`save 名字`**（或直接输入任意新名字）回车一步新建/覆盖，输入 **`del 名字`** 直接删除；
-  - 默认开启 **`enableBuiltInHotkeys = "auto"`**：没开 Alfred 时全部快捷键开箱即用；检测到 Alfred 运行时自动让出 `⌃⌥⌘S / 1~9` 零冲突！
-- **防污染快照 + 自动备份**：按 `Ctrl + Opt + Cmd + S` 保存前会先列出每个桌面捕获到的窗口清单，自动过滤活动监视器/系统设置等杂窗；每次覆盖前自动备份旧版本到 `~/.hammerspoon/backups/`（保留最近 10 份）。
-- **隐形常驻，直接替代 Rectangle**：菜单栏和 Dock 均不占图标，内置零延迟分屏快捷键，支持 `Ctrl+Cmd+T`（左 1/3 / 右 1/3 切换）和 `Ctrl+Cmd+Y`（左 2/3 / 右 2/3 切换）。
-- **（可选）Alfred Powerpack 联动**：附带双击即装的 `alfred/Desk-Layout.alfredworkflow`，输入 `ws` 即可可视化管理全部工作区。
+  - 搜索框直接输入 **`save 名字`**（或直接输入任意新名字）回车一步新建/覆盖，输入 **`del 名字`** 直接删除。
+- **防污染快照 + 自动备份**：按 `Ctrl + Opt + Cmd + S` 保存前会先列出每个桌面捕获到的窗口清单，自动过滤活动监视器/系统设置与幽灵小窗；每次覆盖前自动备份旧版本到 `~/.hammerspoon/backups/`（保留最近 10 份）。
+- **隐形常驻，内置四向分屏**：菜单栏和 Dock 均不占图标，内置零延迟分屏快捷键（上下左右半屏、最大化、`Ctrl+Cmd+T` 左/右 1/3 切换、`Ctrl+Cmd+Y` 左/右 2/3 切换），少装一个常驻分屏软件。
 
 ---
 
@@ -50,24 +48,18 @@
 
 ---
 
-## 快捷键速查（无需 Alfred 开箱即用）
+## 快捷键速查（开箱即用）
 
 | 快捷键 | 功能 |
 | :--- | :--- |
 | **`左 Option + 1 ~ 4`** | 秒切桌面 1 / 2 / 3 / 4（**仅响应左 Option**，完全不冲突右侧 Option 语音输入键！） |
 | **`Ctrl + Opt + Cmd + S`** | 保存 / 覆盖当前桌面布局（弹窗先预览窗口清单；同名覆盖，新名自动分配下一个槽位） |
 | **`Ctrl + Opt + Cmd + 1 ~ 9`** | 一键切换到对应槽位的工作区快照 |
-| **`Ctrl + Opt + Cmd + W`** | 呼出**内置工作区搜索面板**（无 Alfred 也能搜、切、存、删） |
+| **`Ctrl + Opt + Cmd + W`** | 呼出**内置工作区搜索面板**（模糊搜索、切换、新建保存、覆盖或删除） |
 | **`Ctrl + Opt + Cmd + R`** | 修改配置后一键重载 |
 | **`Opt + Cmd + 方向键 / 回车`** | 临时分屏：左半 / 右半 / 上半 / 下半 / 最大化（多屏连按左右可跨屏） |
 | **`Ctrl + Cmd + T`** | 左 1/3 与右 1/3 来回切换 |
 | **`Ctrl + Cmd + Y`** | 左 2/3 与右 2/3 来回切换 |
-
-### （可选）如果你有 Alfred Powerpack
-直接双击 [alfred/Desk-Layout.alfredworkflow](./alfred/Desk-Layout.alfredworkflow) 导入，即可在 Alfred 中输入 `ws`：
-- `ws`：列出全部布局与窗口摘要（`Enter` 切换、`Cmd + Enter` 覆盖、`Opt + Enter` 删除）
-- `ws save 名称`：免弹窗直接保存/覆盖
-- `ws del 名称`：删除布局并释放槽位
 
 ---
 
@@ -106,7 +98,7 @@
 
 ## English Guide
 
-**Mac Desktop Supervise** turns your macOS Spaces into Git-like workspace snapshots using **only free, open-source Hammerspoon** (zero menu bar icons, no Alfred required, and optional 1:1 Rectangle replacement).
+**Mac Desktop Supervise** turns your macOS Spaces into Git-like workspace snapshots using **only free, open-source Hammerspoon** (zero menu bar icons, zero paid dependencies, and built-in 4-way window snapping).
 
 ### 1-Minute Setup
 ```bash
@@ -116,15 +108,13 @@ cd mac-desktop-supervise
 ```
 Then open **System Settings -> Privacy & Security -> Accessibility** and enable **Hammerspoon**.
 
-### Default Shortcuts (Works Standalone Without Alfred)
-- **`Ctrl + Opt + Cmd + S`**: Save or overwrite a named workspace snapshot (previews captured windows, auto-filters junk apps like Activity Monitor, auto-backs up before overwriting).
+### Default Shortcuts
+- **`Left Option + 1..4`**: Instant Space switch 1–4 (leaves Right Option completely untouched).
+- **`Ctrl + Opt + Cmd + S`**: Save or overwrite a named workspace snapshot (previews captured windows, auto-filters junk/ghost popovers, auto-backs up before overwriting).
 - **`Ctrl + Opt + Cmd + 1..9`**: 1-key switch to workspace slot 1–9 (closes stray Finder windows and cleans up unused apps).
-- **`Ctrl + Opt + Cmd + W`**: Built-in fuzzy workspace switcher palette (no Alfred needed).
+- **`Ctrl + Opt + Cmd + W`**: Built-in fuzzy workspace search palette (`Enter` to switch, `Cmd+Enter` to overwrite, `Opt+Enter` to delete, or type `save <name>` / `del <name>`).
 - **`Ctrl + Opt + Cmd + R`**: Reload config after editing `~/.hammerspoon/config.lua`.
-- **`Opt + Cmd + Arrows / Return`** & **`Ctrl + Cmd + T / Y`**: Instant 0ms window tiling (1/2, maximize, Left/Right 1/3 & 2/3 toggle).
-
-### Optional Alfred Powerpack Integration
-Double-click [`alfred/Desk-Layout.alfredworkflow`](./alfred/Desk-Layout.alfredworkflow) and type `ws` in Alfred (`Enter` to switch, `Cmd+Enter` to overwrite, `Opt+Enter` to delete).
+- **`Opt + Cmd + Arrows / Return`** & **`Ctrl + Cmd + T / Y`**: Instant 0ms window tiling (halves, maximize, Left/Right 1/3 & 2/3 toggle).
 
 ### Customization
 Edit `~/.hammerspoon/config.lua` (single file for all settings: `otherAppsAction = "quit" | "hide" | "none"`, `keepAliveApps`, `showMenuIcon`, `enableWindowSnap`, and all hotkeys), then press **`Ctrl + Opt + Cmd + R`**. See [`GUIDE_FOR_AI.md`](./GUIDE_FOR_AI.md) for copy-paste AI customization instructions.

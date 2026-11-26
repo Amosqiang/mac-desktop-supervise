@@ -12,14 +12,11 @@ return {
   showDockIcon = false, -- false = Dock 不显示图标
   autoLaunch = true,    -- true = 开机自动启动 Hammerspoon
 
-  -- 2. 内置快捷键（开箱即用！）
-  --   "auto" = 推荐默认：未运行 Alfred 时自动启用全部快捷键；检测到 Alfred 运行时自动让出 ⌃⌥⌘S / 1~9 避免冲突（⌃⌥⌘W 面板始终可用）
-  --   true   = 始终由 Hammerspoon 接管全部快捷键
-  --   false  = 关闭全部内置布局快捷键
-  enableBuiltInHotkeys = "auto",
+  -- 2. 内置工作区快捷键（开箱即用）
+  enableBuiltInHotkeys = true,
   layoutMods = { "ctrl", "alt", "cmd" }, -- 布局控制修饰键，默认 Ctrl + Option + Command
   saveKey = "s",                         -- 保存/覆盖当前布局：Ctrl+Opt+Cmd + S
-  paletteKey = "w",                      -- 呼出内置 1:1 Alfred 级工作区搜索面板：Ctrl+Opt+Cmd + W
+  paletteKey = "w",                      -- 呼出内置工作区搜索面板：Ctrl+Opt+Cmd + W
   reloadKey = "r",                       -- 重载配置：Ctrl+Opt+Cmd + R
   maxHotkeySlots = 9,                    -- 自动绑定 Ctrl+Opt+Cmd + 1 ~ 9
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================================
-# Mac Desktop Supervise - One-Click Installer (无需 Alfred，开箱即用)
+# Mac Desktop Supervise - One-Click Installer (开箱即用)
 # ============================================================================
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -100,14 +100,14 @@ echo ""
 echo "  1. 打开「系统设置 -> 隐私与安全性 -> 辅助功能」，勾选 Hammerspoon"
 echo "  2. 首次恢复布局时，如果弹窗请求控制 Finder，点击「允许」"
 echo ""
-echo "默认快捷键（无需 Alfred 即可直接使用）："
+echo "默认快捷键："
+echo "  左 Option + 1 ~ 4          秒切桌面 1 ~ 4（不影响右侧 Option 语音键）"
 echo "  Ctrl + Opt + Cmd + S       保存 / 覆盖当前桌面布局（会先预览窗口清单）"
 echo "  Ctrl + Opt + Cmd + 1 ~ 9   一键切换到对应的工作区快照"
 echo "  Ctrl + Opt + Cmd + W       呼出内置工作区搜索面板（模糊搜索 / 保存 / 删除）"
 echo "  Ctrl + Opt + Cmd + R       重载配置"
-echo "  Opt + Cmd + 方向键 / 回车   临时分屏（替代 Rectangle）"
+echo "  Opt + Cmd + 方向键 / 回车   临时分屏（替代分屏软件）"
 echo "  Ctrl + Cmd + T / Y         左 1/3 <-> 右 1/3、左 2/3 <-> 右 2/3 切换"
 echo ""
 echo "个性化修改：直接编辑 ~/.hammerspoon/config.lua"
-echo "（可选）如果你有 Alfred Powerpack，双击 alfred/Desk-Layout.alfredworkflow 即可导入 ws 面板。"
 echo "============================================================"

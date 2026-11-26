@@ -85,9 +85,9 @@ snapKeys = {
 ### 需求 G：保存快照时不想把某个临时软件存进去（防污染）
 查出该软件 Bundle ID，加入 `ignoreOnCapture` 数组即可。
 
-### 需求 H：没有 Alfred 怎么像 `ws` 一样搜索切换布局？
-本工具已内置 macOS 原生搜索面板（基于 `hs.chooser`），**无需安装 Alfred**：
-- 直接按 **`Ctrl + Opt + Cmd + W`** 即可弹出搜索框，支持中文/英文模糊搜索布局、回车一键切换、保存或删除布局。
+### 需求 H：怎么通过搜索面板管理所有桌面布局？
+直接按 **`Ctrl + Opt + Cmd + W`** 呼出内置原生搜索面板（基于 `hs.chooser`）：
+- 支持中英文模糊搜索布局名，`Enter` 立即切换、`Cmd + Enter` 覆盖保存、`Opt + Enter` 删除布局；也可直接输入 `save 名称` 或 `del 名称` 一步操作。
 
 ---
 

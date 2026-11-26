@@ -8,7 +8,6 @@ video/
 # Personal local maintenance scripts (not needed by GitHub users)
 deploy.sh
 clean_base.py
-alfred/build_workflow.py
 
 # Personal layout snapshots & logs (never commit personal app state)
 desk_layouts.json
